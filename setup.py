@@ -38,13 +38,7 @@ DESCRIPTION = docstrings[0]
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
-try:
-    from pypandoc import convert
-    read_md = lambda f: convert(f, 'rst')
-except ImportError:
-    print('warning: pypandoc module not found, could not convert '
-          'Markdown to RST')
-    read_md = lambda f: open(f, 'r').read()
+read_md = lambda f: open(f, 'r').read()
 
 CLASSIFIERS = [
     'Development Status :: 5 - Production/Stable',
@@ -71,6 +65,7 @@ setup(name=PACKAGE,
       version=VERSION,
       description=DESCRIPTION,
       long_description=read_md('README.md'),
+      long_description_content_type="text/markdown",
       author=AUTHOR,
       author_email=EMAIL,
       license=LICENSE,
