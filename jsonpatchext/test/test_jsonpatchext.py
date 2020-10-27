@@ -8,10 +8,21 @@ import jsonpatch
 import jsonpatchext
 
 
-def MyComparatorStartsWith(v1, v2):
-    if not v1.startswith(v2):
+def MyComparatorStartsWith(current, compare):
+    if not current.startswith(compare):
         msg = '{0} ({1}) doest not starts with {2} ({3})'
-        raise jsonpatch.JsonPatchTestFailed(msg.format(v1, type(v1), v2, type(v2)))
+        raise jsonpatch.JsonPatchTestFailed(msg.format(current, type(current), compare, type(compare)))
+
+
+def MyMutatorAddKey(current, value):
+    current.update({
+        'corge': 'grault',
+    })
+    return current
+
+
+def MyMutatorRemoveLast(current, value):
+    return current[:-1]
 
 
 class ApplyPatchTestCase(unittest.TestCase):
@@ -189,6 +200,43 @@ class ApplyPatchTestCase(unittest.TestCase):
         obj = {'foo': ['bar', 'baz']}
         patch_obj = [{'op': 'check', 'path': '/foo/bar', 'value': 'foo', 'cmp': 'in'}]
         self.assertRaises(jsonpatch.JsonPatchTestFailed, jsonpatchext.apply_patch, obj, patch_obj)
+
+    def test_mutate_uppercase(self):
+        obj = {'foo': {'bar': 'baz'}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar', 'mut': 'uppercase'}])
+        self.assertEqual(res, {'foo': {'bar': 'BAZ'}})
+
+    def test_mutate_multiple(self):
+        obj = {'foo': {'bar': 'baz'}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar',
+            'mut': ['uppercase', ('custom', MyMutatorRemoveLast), ('regex', ('A', 'X'))]}])
+        self.assertEqual(res, {'foo': {'bar': 'BX'}})
+
+    def test_mutate_custom(self):
+        obj = {'foo': {'bar': 'baz'}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'mutator': MyMutatorAddKey}])
+        self.assertEqual(res, {'foo': {'bar': 'baz', 'corge': 'grault'}})
+
+    def test_mutate_cast(self):
+        obj = {'foo': {'bar': '15'}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar', 'mut': 'cast', 'value': int}])
+        self.assertEqual(res, {'foo': {'bar': 15}})
+
+    def test_mutate_regex(self):
+        obj = {'foo': {'bar': '01/02/03'}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar', 'mut': 'regex',
+            'value': ('(\w{2})/(\d{2})/(\d{2})', r'\1-\2-\3')}])
+        self.assertEqual(res, {'foo': {'bar': '01-02-03'}})
+
+    def test_mutate_slice(self):
+        obj = {'foo': ['bar1', 'bar2', 'bar3', 'bar4']}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'slice', 'value': [1, 3]}])
+        self.assertEqual(res, {'foo': ['bar2', 'bar3']})
+
+    def test_mutate_slice_fail(self):
+        obj = {'foo': ['bar1', 'bar2', 'bar3', 'bar4']}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'slice', 'value': [1, 2]}])
+        self.assertNotEqual(res, {'foo': ['bar2', 'bar3']})
 
 
 if __name__ == '__main__':

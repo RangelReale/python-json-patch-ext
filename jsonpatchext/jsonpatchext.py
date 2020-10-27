@@ -45,6 +45,7 @@ from jsonpointer import JsonPointerException
 
 from jsonpatchext.comparators import EqualsComparator, NotEqualsComparator, RegExComparator, StartsWithComparator, \
     EndsWithComparator, LengthComparator, IsAComparator, IsComparator, RangeComparator, InComparator
+from jsonpatchext.mutators import UppercaseMutator, LowercaseMutator, CastMutator, RegExMutator, SliceMutator
 
 try:
     from collections.abc import MutableMapping, MutableSequence
@@ -55,7 +56,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.28'
+__version__ = '1.29'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
@@ -106,22 +107,28 @@ def make_patch(src, dst):
 class JsonPatchExt(JsonPatch):
     """A JSON Patch is a list of Patch Operations.
 
-    This modules add 2 more operations: 'check' and 'merge'.
+    This modules add 3 more operations: 'check', 'mutate' and 'merge'.
 
-    >>> def StartsWithComparator(v1, v2):
-    ...     if v1.startswith(v2):
+    >>> def StartsWithComparator(current, compare):
+    ...     if current.startswith(compare):
     ...         msg = '{0} ({1}) does not starts with {2} ({3})'
-    ...         raise JsonPatchTestFailed(msg.format(v1, type(v1), v2, type(v2)))
-
+    ...         raise JsonPatchTestFailed(msg.format(current, type(current), compare, type(compare)))
+    ...
+    >>> def RemoveLastMutator(current, value):
+    ...     return current[:-1]
+    ...
     >>> patch = JsonPatchExt([
     ...     {'op': 'add', 'path': '/foo', 'value': {'bar': 'barvalue'}},
     ...     {'op': 'check', 'path': '/foo/bar', 'value': 'bar', 'cmp': 'equals'},
     ...     {'op': 'merge', 'path': '/foo', 'value': {'newbar': 'newbarvalue'}},
     ...     {'op': 'check', 'path': '/foo/newbar', 'value': 'newb', 'cmp': 'custom', 'comparator': StartsWithComparator},
+    ...     {'op': 'mutate', 'path': '/foo/newbar', 'mut': 'uppercase'},
+    ...     {'op': 'mutate', 'path': '/foo/newbar', 'mut': 'custom', 'mutator': RemoveLastMutator},
+    ...     {'op': 'mutate', 'path': '/foo/bar', 'mut': ['uppercase', ('custom', RemoveLastMutator)]},
     ... ])
     >>> doc = {}
     >>> result = patch.apply(doc)
-    >>> expected = {'foo': {'bar': 'barvalue', 'newbar': 'newbarvalue'}}
+    >>> expected = {'foo': {'bar': 'BARVALU', 'newbar': 'NEWBARVALU'}}
     >>> result == expected
     True
     """
@@ -129,6 +136,7 @@ class JsonPatchExt(JsonPatch):
         super(JsonPatchExt, self).__init__(patch)
         self.operations.update({
             'check': CheckOperation,
+            'mutate': MutateOperation,
             'merge': MergeOperation,
         })
 
@@ -193,6 +201,86 @@ class CheckOperation(PatchOperation):
         return self.comparators[cmp]
 
 
+class MutateOperation(PatchOperation):
+    """Check value by specified location using a comparator."""
+
+    def __init__(self, operation):
+        super(MutateOperation, self).__init__(operation)
+
+        self.mutators = {
+            'uppercase': UppercaseMutator,
+            'lowercase': LowercaseMutator,
+            'cast': CastMutator,
+            'regex': RegExMutator,
+            'slice': SliceMutator,
+            'custom': None,
+        }
+
+    def apply(self, obj):
+        subobj, part = self.pointer.to_last(obj)
+
+        if part == "-":
+            raise InvalidJsonPatch("'path' with '-' can't be applied to 'mutation' operation")
+
+        if isinstance(subobj, MutableSequence):
+            if part >= len(subobj) or part < 0:
+                raise JsonPatchConflict("can't replace outside of list")
+
+        elif isinstance(subobj, MutableMapping):
+            if part is not None and part not in subobj:
+                msg = "can't replace a non-existent object '{0}'".format(part)
+                raise JsonPatchConflict(msg)
+        else:
+            if part is None:
+                raise TypeError("invalid document type {0}".format(type(subobj)))
+            else:
+                raise JsonPatchConflict("unable to fully resolve json pointer {0}, part {1}".format(self.location, part))
+
+        try:
+            if part is not None:
+                subobj[part] = self._apply_mutators(subobj[part])
+            else:
+                self._apply_mutators(subobj)
+        except Exception as e:
+            raise_with_traceback(InvalidJsonPatch('Invalid mutation: {}'.format(str(e))))
+
+        return obj
+
+    def _apply_mutators(self, val):
+        if 'mut' not in self.operation:
+            raise InvalidJsonPatch("Operation does not contain 'mut' member")
+
+        mut = self.operation['mut']
+
+        if not isinstance(mut, list):
+            mut = [mut]
+
+        value = self.operation['value'] if 'value' in self.operation else None
+
+        for m in mut:
+            mparam = value
+            mcustomparam = None
+            if isinstance(m, tuple):
+                mparam = m[1]
+                mcustomparam = m[2] if len(m) > 2 else None
+                m = m[0]
+
+            if not isinstance(m, basestring):
+                raise InvalidJsonPatch("Mutator must be a string")
+
+            if m == 'custom':
+                if mparam is None and 'mutator' not in self.operation:
+                    raise InvalidJsonPatch("Operation does not contain 'mutator' member")
+                curmutator = mparam if mparam is not None else self.operation['mutator']
+                mparam = mcustomparam
+            else:
+                if m not in self.mutators:
+                    raise InvalidJsonPatch("Unknown mutator {0!r}".format(m))
+                curmutator = self.mutators[m]
+            val = curmutator(val, mparam)
+        return val
+
+
 class MergeOperation(PatchOperation):
     """Merges an object property or an array element with a new value, using package deepmerge."""
 
@@ -206,7 +294,7 @@ class MergeOperation(PatchOperation):
         subobj, part = self.pointer.to_last(obj)
 
         if part == "-":
-            raise InvalidJsonPatch("'path' with '-' can't be applied to 'replace' operation")
+            raise InvalidJsonPatch("'path' with '-' can't be applied to 'merge' operation")
 
         if isinstance(subobj, MutableSequence):
             if part >= len(subobj) or part < 0:

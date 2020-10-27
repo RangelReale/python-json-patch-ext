@@ -8,7 +8,7 @@ Applying JSON Patches in Python
 -------------------------------
 
 This module extends the Python [jsonpatch](https://github.com/stefankoegl/python-json-patch) module to 
-add a 'check' and a 'merge' operations.
+add 'check', 'mutate' and 'merge' operations.
 
 See source code for examples
 
