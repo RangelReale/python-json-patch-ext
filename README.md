@@ -14,6 +14,8 @@ See source code for examples
 
 * Website: https://github.com/RangelReale/python-json-patch-ext
 * Repository: https://github.com/RangelReale/python-json-patch-ext.git
+* Documentation: https://python-json-patch-ext.readthedocs.org/
+* PyPI: https://pypi.python.org/pypi/jsonpatchext
 
 ### Author
 
