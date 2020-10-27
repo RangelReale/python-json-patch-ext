@@ -43,6 +43,9 @@ from jsonpatch import PatchOperation, JsonPatchTestFailed, InvalidJsonPatch, \
     JsonPatchConflict, JsonPatch
 from jsonpointer import JsonPointerException
 
+from jsonpatchext.comparators import EqualsComparator, NotEqualsComparator, RegExComparator, StartsWithComparator, \
+    EndsWithComparator, LengthComparator, IsAComparator, IsComparator, RangeComparator, InComparator
+
 try:
     from collections.abc import MutableMapping, MutableSequence
 
@@ -52,7 +55,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.26'
+__version__ = '1.27'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
@@ -138,6 +141,15 @@ class CheckOperation(PatchOperation):
 
         self.comparators = {
             'equals': EqualsComparator,
+            'notequals': NotEqualsComparator,
+            'regex': RegExComparator,
+            'startswith': StartsWithComparator,
+            'endswith': EndsWithComparator,
+            'length': LengthComparator,
+            'isa': IsAComparator,
+            'is': IsComparator,
+            'range': RangeComparator,
+            'in': InComparator,
             'custom': None,
         }
 
@@ -219,11 +231,3 @@ class MergeOperation(PatchOperation):
             raise_with_traceback(InvalidJsonPatch('Invalid merge: {}'.format(str(e))))
 
         return obj
-
-
-
-def EqualsComparator(v1, v2):
-    """Compare if the values are exactly equals."""
-    if v1 != v2:
-        msg = '{0} ({1}) is not equal to tested value {2} ({3})'
-        raise JsonPatchTestFailed(msg.format(v1, type(v1), v2, type(v2)))
