@@ -10,7 +10,7 @@ except ImportError:
     from distutils.core import setup
     has_setuptools = False
 
-src = io.open('jsonpatchext.py', encoding='utf-8').read()
+src = io.open('jsonpatchext/jsonpatchext.py', encoding='utf-8').read()
 metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
 docstrings = re.findall('"""([^"]*)"""', src, re.MULTILINE | re.DOTALL)
 
@@ -80,6 +80,6 @@ setup(name=PACKAGE,
           'Documentation': "https://python-json-patch-ext.readthedocs.org/",
           'PyPI': 'https://pypi.org/pypi/jsonpatchext',
       },
-      test_suite="tests",
+      test_suite="jsonpatchext.test.test_jsonpatchext",
       **OPTIONS
 )

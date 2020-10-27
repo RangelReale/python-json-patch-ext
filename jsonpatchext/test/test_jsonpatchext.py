@@ -20,7 +20,7 @@ class ApplyPatchTestCase(unittest.TestCase):
         obj = {'foo': {'bar': 'baz'}}
         try:
             jsonpatchext.apply_patch(obj, [{'op': 'check', 'path': '/foo/bar', 'value': 'baz', 'cmp': 'equals'}])
-        except jsonpatchext.JsonPatchTestFailed:
+        except jsonpatch.JsonPatchTestFailed:
             self.fail('test_check_equals() raise JsonPatchTestFailed unexpectedly!')
 
     def test_check_equals_fail(self):
@@ -33,7 +33,7 @@ class ApplyPatchTestCase(unittest.TestCase):
         try:
             jsonpatchext.apply_patch(obj, [{'op': 'check', 'path': '/foo/bar', 'value': 'b',
                 'cmp': 'custom', 'comparator': ComparatorStartsWith}])
-        except jsonpatchext.JsonPatchTestFailed:
+        except jsonpatch.JsonPatchTestFailed:
             self.fail('test_check_custom() raise JsonPatchTestFailed unexpectedly!')
 
     def test_check_custom_fail(self):

@@ -1,5 +1,4 @@
 include requirements.txt
 include COPYING
 include README.md
-include tests.py
 include AUTHORS
