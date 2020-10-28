@@ -33,12 +33,12 @@
 """ Apply JSON-Patches (RFC 6902) with extensions """
 
 from __future__ import unicode_literals
-from future.utils import raise_with_traceback
 
 import sys
 
-from deepmerge import merge_or_raise
+from deepmerge import Merger
 from deepmerge.exception import InvalidMerge
+from future.utils import raise_with_traceback
 from jsonpatch import PatchOperation, JsonPatchTestFailed, InvalidJsonPatch, \
     JsonPatchConflict, JsonPatch
 from jsonpointer import JsonPointerException
@@ -56,7 +56,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.30'
+__version__ = '1.31'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
@@ -281,6 +281,25 @@ class MutateOperation(PatchOperation):
         return val
 
 
+def merge_type_conflict(config, path, base, nxt):
+    if len(path) > 0:
+        raise InvalidMerge("Type conflict at '/{}': {}, {}".format(
+            '/'.join(path), type(base), type(nxt)
+        ))
+    raise InvalidMerge("Type conflict: {}, {}".format(
+        type(base), type(nxt)
+    ))
+
+
+MergeOperationMerger = Merger(
+    [
+        (list, "append"),
+        (dict, "merge")
+    ],
+    [], [merge_type_conflict]
+)
+
+
 class MergeOperation(PatchOperation):
     """Merges an object property or an array element with a new value, using package deepmerge."""
 
@@ -313,12 +332,13 @@ class MergeOperation(PatchOperation):
         try:
             self.apply_merge(subobj, part, value)
         except InvalidMerge as e:
-            raise_with_traceback(InvalidJsonPatch('Invalid merge: {}'.format(str(e))))
+            raise_with_traceback(InvalidJsonPatch('Invalid merge at "{}": {}'.format(
+                self.location, str(e))))
 
         return obj
 
     def apply_merge(self, subobj, part, value):
         if part is not None:
-            subobj[part] = merge_or_raise.merge(subobj[part], value)
+            subobj[part] = MergeOperationMerger.merge(subobj[part], value)
         else:
-            merge_or_raise.merge(subobj, value)
+            MergeOperationMerger.merge(subobj, value)
