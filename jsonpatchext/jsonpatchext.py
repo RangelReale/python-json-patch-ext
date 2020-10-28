@@ -56,7 +56,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.29'
+__version__ = '1.30'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
@@ -311,11 +311,14 @@ class MergeOperation(PatchOperation):
                 raise JsonPatchConflict("unable to fully resolve json pointer {0}, part {1}".format(self.location, part))
 
         try:
-            if part is not None:
-                subobj[part] = merge_or_raise.merge(subobj[part], value)
-            else:
-                merge_or_raise.merge(subobj, value)
+            self.apply_merge(subobj, part, value)
         except InvalidMerge as e:
             raise_with_traceback(InvalidJsonPatch('Invalid merge: {}'.format(str(e))))
 
         return obj
+
+    def apply_merge(self, subobj, part, value):
+        if part is not None:
+            subobj[part] = merge_or_raise.merge(subobj[part], value)
+        else:
+            merge_or_raise.merge(subobj, value)
