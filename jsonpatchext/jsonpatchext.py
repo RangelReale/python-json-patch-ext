@@ -56,7 +56,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.31'
+__version__ = '1.32'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
@@ -291,12 +291,22 @@ def merge_type_conflict(config, path, base, nxt):
     ))
 
 
+def merge_fallback(config, path, base, nxt):
+    if len(path) > 0:
+        raise InvalidMerge("Merge fallback at '/{}': {}, {}".format(
+            '/'.join(path), type(base), type(nxt)
+        ))
+    raise InvalidMerge("Merge fallback: {}, {}".format(
+        type(base), type(nxt)
+    ))
+
+
 MergeOperationMerger = Merger(
     [
         (list, "append"),
         (dict, "merge")
     ],
-    [], [merge_type_conflict]
+    [merge_fallback], [merge_type_conflict]
 )
 
 
