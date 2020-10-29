@@ -1,2 +1,3 @@
 wheel
 pypandoc
+sphinx-rtd-theme
