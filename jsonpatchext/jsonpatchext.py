@@ -110,15 +110,15 @@ class JsonPatchExt(JsonPatch):
     This modules add 3 more operations: 'check', 'mutate' and 'merge'.
 
     >>> def StartsWithComparator(current, compare):
-    ...     if current.startswith(compare):
+    ...     if not current.startswith(compare):
     ...         msg = '{0} ({1}) does not starts with {2} ({3})'
     ...         raise JsonPatchTestFailed(msg.format(current, type(current), compare, type(compare)))
-    ...
+
     >>> def RemoveLastMutator(current, value):
     ...     return current[:-1]
-    ...
+
     >>> patch = JsonPatchExt([
-    ...     {'op': 'add', 'path': '/foo', 'value': {'bar': 'barvalue'}},
+    ...     {'op': 'add', 'path': '/foo', 'value': {'bar': 'bar'}},
     ...     {'op': 'check', 'path': '/foo/bar', 'value': 'bar', 'cmp': 'equals'},
     ...     {'op': 'merge', 'path': '/foo', 'value': {'newbar': 'newbarvalue'}},
     ...     {'op': 'check', 'path': '/foo/newbar', 'value': 'newb', 'cmp': 'custom', 'comparator': StartsWithComparator},
@@ -128,9 +128,8 @@ class JsonPatchExt(JsonPatch):
     ... ])
     >>> doc = {}
     >>> result = patch.apply(doc)
-    >>> expected = {'foo': {'bar': 'BARVALU', 'newbar': 'NEWBARVALU'}}
-    >>> result == expected
-    True
+    >>> print(result)
+    {'foo': {'bar': 'BA', 'newbar': 'NEWBARVALU'}}
     """
     def __init__(self, patch):
         super(JsonPatchExt, self).__init__(patch)
@@ -139,6 +138,46 @@ class JsonPatchExt(JsonPatch):
             'mutate': MutateOperation,
             'merge': MergeOperation,
         })
+
+        self.check_operations = {
+            'check': CheckOperation,
+        }
+
+    def check(self, obj):
+        """Checks the object using the patch.
+
+        :param obj: Document object.
+        :type obj: dict
+
+        :return: whether the check succedded
+        :rtype: bool
+        """
+        for operation in self._check_ops:
+            try:
+                operation.apply(obj)
+            except JsonPatchTestFailed:
+                return False
+
+        return True
+
+    @property
+    def _check_ops(self):
+        return tuple(map(self._get_check_operation, self.patch))
+
+    def _get_check_operation(self, operation):
+        if 'op' not in operation:
+            raise InvalidJsonPatch("Operation does not contain 'op' member")
+
+        op = operation['op']
+
+        if not isinstance(op, basestring):
+            raise InvalidJsonPatch("Operation must be a string")
+
+        if op not in self.check_operations:
+            raise InvalidJsonPatch("Unknown operation {0!r}".format(op))
+
+        cls = self.check_operations[op]
+        return cls(operation)
 
 
 class CheckOperation(PatchOperation):

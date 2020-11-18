@@ -1,26 +1,3 @@
-python-json-patch-ext
-=====================
-
-[![PyPI version](https://img.shields.io/pypi/v/jsonpatchext.svg)](https://pypi.python.org/pypi/jsonpatchext/)
-[![Supported Python versions](https://img.shields.io/pypi/pyversions/jsonpatchext.svg)](https://pypi.python.org/pypi/jsonpatch/)
-
-Applying JSON Patches in Python
--------------------------------
-
-This module extends the Python [jsonpatch](https://github.com/stefankoegl/python-json-patch) module to 
-add 'check', 'mutate' and 'merge' operations.
-
-See source code for examples
-
-* Website: https://github.com/RangelReale/python-json-patch-ext
-* Repository: https://github.com/RangelReale/python-json-patch-ext.git
-* Documentation: https://python-json-patch-ext.readthedocs.org/
-* PyPI: https://pypi.python.org/pypi/jsonpatchext
-
-
-### Example
-
-```python
 from jsonpatchext import JsonPatchExt, JsonPatchTestFailed
 
 def StartsWithComparator(current, compare):
@@ -51,15 +28,3 @@ checkpatch = JsonPatchExt([
 
 result = checkpatch.check(result)
 print(result)
-```
-
-Output:
-
-```text
-{'foo': {'bar': 'BA', 'newbar': 'NEWBARVALU'}}
-True
-```
-
-### Author
-
-Rangel Reale (rangelspam@gmail.com)
