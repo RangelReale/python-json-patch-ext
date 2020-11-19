@@ -31,3 +31,19 @@ def InitMutator(current, value):
     if current is None:
         return value
     return current
+
+
+def InitItemMutator(*item):
+    """Initialize an item in a dict/list if it does not exists or is None. If more than one item, create the full hierarchy"""
+    def m(current, value):
+        # plist, plast = item[:len(item)-1], item[len(item)-1]
+        plist, plast = item[:-1], item[-1]
+        cur = current
+        for i in plist:
+            if i not in cur or cur[i] is None:
+                cur[i] = {}
+            cur = cur[i]
+        if plast not in cur or cur[plast] is None:
+            cur[plast] = value
+        return current
+    return m

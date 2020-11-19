@@ -15,14 +15,13 @@ patch = JsonPatchExt([
     {'op': 'check', 'path': '/foo/newbar', 'value': 'newb', 'cmp': 'custom', 'comparator': StartsWithComparator},
     {'op': 'mutate', 'path': '/foo/newbar', 'mut': 'uppercase'},
     {'op': 'mutate', 'path': '/foo/newbar', 'mut': 'custom', 'mutator': RemoveLastMutator},
-    {'op': 'mutate', 'path': '/foo/bar', 'mut': ['uppercase', ('custom', RemoveLastMutator)]},
 ])
 doc = {}
 result = patch.apply(doc)
 print(result)
 
 checkpatch = JsonPatchExt([
-    {'op': 'check', 'path': '/foo/bar', 'value': 'BA', 'cmp': 'equals'},
+    {'op': 'check', 'path': '/foo/bar', 'value': 'bar', 'cmp': 'equals'},
     {'op': 'check', 'path': '/foo/newbar', 'value': 'NEWB', 'cmp': 'custom', 'comparator': StartsWithComparator},
 ])
 

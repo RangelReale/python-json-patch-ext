@@ -293,33 +293,20 @@ class MutateOperation(PatchOperation):
 
         mut = self.operation['mut']
 
-        if not isinstance(mut, list):
-            mut = [mut]
+        if not isinstance(mut, basestring):
+            raise InvalidJsonPatch("Mutator must be a string")
 
         value = self.operation['value'] if 'value' in self.operation else None
 
-        for m in mut:
-            mparam = value
-            mcustomparam = None
-            if isinstance(m, tuple):
-                mparam = m[1]
-                mcustomparam = m[2] if len(m) > 2 else None
-                m = m[0]
+        if mut == 'custom':
+            if 'mutator' not in self.operation:
+                raise InvalidJsonPatch("Operation does not contain 'mutator' member")
+            return self.operation['mutator'](val, value)
 
-            if not isinstance(m, basestring):
-                raise InvalidJsonPatch("Mutator must be a string")
+        if mut not in self.mutators:
+            raise InvalidJsonPatch("Unknown mutator {0!r}".format(mut))
 
-            if m == 'custom':
-                if mparam is None and 'mutator' not in self.operation:
-                    raise InvalidJsonPatch("Operation does not contain 'mutator' member")
-                curmutator = mparam if mparam is not None else self.operation['mutator']
-                mparam = mcustomparam
-            else:
-                if m not in self.mutators:
-                    raise InvalidJsonPatch("Unknown mutator {0!r}".format(m))
-                curmutator = self.mutators[m]
-            val = curmutator(val, mparam)
-        return val
+        return self.mutators[mut](val, value)
 
 
 def merge_type_conflict(config, path, base, nxt):

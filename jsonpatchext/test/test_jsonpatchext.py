@@ -6,6 +6,7 @@ import unittest
 import jsonpatch
 
 import jsonpatchext
+from jsonpatchext.mutators import InitItemMutator
 
 
 def MyComparatorStartsWith(current, compare):
@@ -206,12 +207,6 @@ class ApplyPatchTestCase(unittest.TestCase):
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar', 'mut': 'uppercase'}])
         self.assertEqual(res, {'foo': {'bar': 'BAZ'}})
 
-    def test_mutate_multiple(self):
-        obj = {'foo': {'bar': 'baz'}}
-        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar',
-            'mut': ['uppercase', ('custom', MyMutatorRemoveLast), ('regex', ('A', 'X'))]}])
-        self.assertEqual(res, {'foo': {'bar': 'BX'}})
-
     def test_mutate_custom(self):
         obj = {'foo': {'bar': 'baz'}}
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'mutator': MyMutatorAddKey}])
@@ -244,6 +239,20 @@ class ApplyPatchTestCase(unittest.TestCase):
         self.assertEqual(res, {'foo': [1, 3]})
         res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 4]}])
         self.assertEqual(res2, {'foo': [1, 3]})
+
+    def test_mutate_inititem(self):
+        obj = {'foo': {}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 3], 'mutator': InitItemMutator('bar')}])
+        self.assertEqual(res, {'foo': {'bar': [1, 3]}})
+        res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 4], 'mutator': InitItemMutator('bar')}])
+        self.assertEqual(res2, {'foo': {'bar': [1, 3]}})
+
+    def test_mutate_inititem2(self):
+        obj = {'foo': {}}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 3], 'mutator': InitItemMutator('bar', 'bin')}])
+        self.assertEqual(res, {'foo': {'bar': {'bin': [1, 3]}}})
+        res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 4], 'mutator': InitItemMutator('bar', 'bin')}])
+        self.assertEqual(res2, {'foo': {'bar': {'bin': [1, 3]}}})
 
 
 if __name__ == '__main__':
