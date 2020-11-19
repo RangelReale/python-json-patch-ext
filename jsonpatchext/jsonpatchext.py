@@ -147,7 +147,7 @@ class JsonPatchExt(JsonPatch):
         """Checks the object using the patch.
 
         :param obj: Document object.
-        :type obj: dict
+        :type obj: Mapping
 
         :return: whether the check succedded
         :rtype: bool
