@@ -2,10 +2,8 @@
 
 if "%1"=="" goto paramerror
 
-if "%1" NEQ "patch" (
-    if "%1" NEQ "minor" (
-        goto paramerror
-    )
+if "%1" NEQ "minor" (
+    goto paramerror
 )
 
 python -m unittest
