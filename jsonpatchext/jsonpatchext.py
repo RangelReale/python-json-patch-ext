@@ -57,7 +57,7 @@ except ImportError:
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rangel Reale <rangelspam@gmail.com>'
-__version__ = '1.34'
+__version__ = '1.35'
 __website__ = 'https://github.com/RangelReale/python-json-patch-ext'
 __license__ = 'Modified BSD License'
 
