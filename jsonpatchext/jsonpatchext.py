@@ -268,9 +268,8 @@ class MutateOperation(PatchOperation):
                 raise JsonPatchConflict("can't replace outside of list")
 
         elif isinstance(subobj, MutableMapping):
-            if part is not None and part not in subobj:
-                msg = "can't replace a non-existent object '{0}'".format(part)
-                raise JsonPatchConflict(msg)
+            # allow mutating non-existent key
+            pass
         else:
             if part is None:
                 raise TypeError("invalid document type {0}".format(type(subobj)))
@@ -279,7 +278,7 @@ class MutateOperation(PatchOperation):
 
         try:
             if part is not None:
-                subobj[part] = self._apply_mutators(subobj[part])
+                subobj[part] = self._apply_mutators(subobj[part] if part in subobj else None)
             else:
                 self._apply_mutators(subobj)
         except Exception as e:

@@ -234,6 +234,13 @@ class ApplyPatchTestCase(unittest.TestCase):
         self.assertNotEqual(res, {'foo': ['bar2', 'bar3']})
 
     def test_mutate_init(self):
+        obj = {}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 3]}])
+        self.assertEqual(res, {'foo': [1, 3]})
+        res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 4]}])
+        self.assertEqual(res2, {'foo': [1, 3]})
+
+    def test_mutate_init2(self):
         obj = {'foo': None}
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 3]}])
         self.assertEqual(res, {'foo': [1, 3]})
@@ -241,13 +248,20 @@ class ApplyPatchTestCase(unittest.TestCase):
         self.assertEqual(res2, {'foo': [1, 3]})
 
     def test_mutate_inititem(self):
-        obj = {'foo': {}}
+        obj = {}
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 3], 'mutator': InitItemMutator('bar')}])
         self.assertEqual(res, {'foo': {'bar': [1, 3]}})
         res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 4], 'mutator': InitItemMutator('bar')}])
         self.assertEqual(res2, {'foo': {'bar': [1, 3]}})
 
     def test_mutate_inititem2(self):
+        obj = {'foo': None}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 3], 'mutator': InitItemMutator('bar')}])
+        self.assertEqual(res, {'foo': {'bar': [1, 3]}})
+        res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 4], 'mutator': InitItemMutator('bar')}])
+        self.assertEqual(res2, {'foo': {'bar': [1, 3]}})
+
+    def test_mutate_inititem3(self):
         obj = {'foo': {}}
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'custom', 'value': [1, 3], 'mutator': InitItemMutator('bar', 'bin')}])
         self.assertEqual(res, {'foo': {'bar': {'bin': [1, 3]}}})

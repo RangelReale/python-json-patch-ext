@@ -38,12 +38,14 @@ def InitItemMutator(*item):
     def m(current, value):
         # plist, plast = item[:len(item)-1], item[len(item)-1]
         plist, plast = item[:-1], item[-1]
+        if current is None:
+            current = {}
         cur = current
         for i in plist:
             if i not in cur or cur[i] is None:
                 cur[i] = {}
             cur = cur[i]
         if plast not in cur or cur[plast] is None:
-            cur[plast] = value
+            cur[plast] = value() if callable(value) else value
         return current
     return m
