@@ -45,7 +45,8 @@ from jsonpointer import JsonPointerException
 
 from jsonpatchext.comparators import EqualsComparator, NotEqualsComparator, RegExComparator, StartsWithComparator, \
     EndsWithComparator, LengthComparator, IsAComparator, IsComparator, RangeComparator, InComparator
-from jsonpatchext.mutators import UppercaseMutator, LowercaseMutator, CastMutator, RegExMutator, SliceMutator
+from jsonpatchext.mutators import UppercaseMutator, LowercaseMutator, CastMutator, RegExMutator, SliceMutator, \
+    InitMutator
 
 try:
     from collections.abc import MutableMapping, MutableSequence
@@ -252,6 +253,7 @@ class MutateOperation(PatchOperation):
             'cast': CastMutator,
             'regex': RegExMutator,
             'slice': SliceMutator,
+            'init': InitMutator,
             'custom': None,
         }
 

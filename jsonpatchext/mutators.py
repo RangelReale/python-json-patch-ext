@@ -24,3 +24,10 @@ def RegExMutator(current, value):
 def SliceMutator(current, value):
     """Returns a slice of the current value. Value must be a tuple (start, stop) or (start, stop, step)"""
     return current[slice(value[0], value[1], value[2] if len(value) > 2 else None)]
+
+
+def InitMutator(current, value):
+    """Initialize the value if it is None"""
+    if current is None:
+        return value
+    return current

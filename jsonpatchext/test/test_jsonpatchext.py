@@ -238,6 +238,13 @@ class ApplyPatchTestCase(unittest.TestCase):
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'slice', 'value': [1, 2]}])
         self.assertNotEqual(res, {'foo': ['bar2', 'bar3']})
 
+    def test_mutate_init(self):
+        obj = {'foo': None}
+        res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 3]}])
+        self.assertEqual(res, {'foo': [1, 3]})
+        res2 = jsonpatchext.apply_patch(res, [{'op': 'mutate', 'path': '/foo', 'mut': 'init', 'value': [1, 4]}])
+        self.assertEqual(res2, {'foo': [1, 3]})
+
 
 if __name__ == '__main__':
     modules = ['jsonpatchext']
