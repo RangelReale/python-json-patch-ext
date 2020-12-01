@@ -68,6 +68,13 @@ def RangeComparator(current, compare):
 
 def InComparator(current, compare):
     """Test if a key is in a list or dict."""
+    if compare not in current:
+        msg = '{0} ({1}) is not in {2} ({3})'
+        raise JsonPatchTestFailed(msg.format(compare, type(compare), current, type(current)))
+
+
+def InValueComparator(current, compare):
+    """Test if a key is in a list or dict."""
     if current not in compare:
         msg = '{0} ({1}) is not in {2} ({3})'
         raise JsonPatchTestFailed(msg.format(current, type(current), compare, type(compare)))

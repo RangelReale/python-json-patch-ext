@@ -202,6 +202,18 @@ class ApplyPatchTestCase(unittest.TestCase):
         patch_obj = [{'op': 'check', 'path': '/foo/bar', 'value': 'foo', 'cmp': 'in'}]
         self.assertRaises(jsonpatch.JsonPatchTestFailed, jsonpatchext.apply_patch, obj, patch_obj)
 
+    def test_check_invalue(self):
+        obj = {'foo': 'bar'}
+        try:
+            jsonpatchext.apply_patch(obj, [{'op': 'check', 'path': '/foo', 'value': ['bar', 'baz'], 'cmp': 'invalue'}])
+        except jsonpatch.JsonPatchTestFailed:
+            self.fail('test_check_invalue() raise JsonPatchTestFailed unexpectedly!')
+
+    def test_check_invalue_fail(self):
+        obj = {'foo': 'foo'}
+        patch_obj = [{'op': 'check', 'path': '/foo/bar', 'value': ['bar', 'baz'], 'cmp': 'invalue'}]
+        self.assertRaises(jsonpatch.JsonPatchTestFailed, jsonpatchext.apply_patch, obj, patch_obj)
+
     def test_mutate_uppercase(self):
         obj = {'foo': {'bar': 'baz'}}
         res = jsonpatchext.apply_patch(obj, [{'op': 'mutate', 'path': '/foo/bar', 'mut': 'uppercase'}])

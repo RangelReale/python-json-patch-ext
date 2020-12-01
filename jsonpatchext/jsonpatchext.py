@@ -44,7 +44,7 @@ from jsonpatch import PatchOperation, JsonPatchTestFailed, InvalidJsonPatch, \
 from jsonpointer import JsonPointerException
 
 from jsonpatchext.comparators import EqualsComparator, NotEqualsComparator, RegExComparator, StartsWithComparator, \
-    EndsWithComparator, LengthComparator, IsAComparator, IsComparator, RangeComparator, InComparator
+    EndsWithComparator, LengthComparator, IsAComparator, IsComparator, RangeComparator, InComparator, InValueComparator
 from jsonpatchext.mutators import UppercaseMutator, LowercaseMutator, CastMutator, RegExMutator, SliceMutator, \
     InitMutator
 
@@ -198,6 +198,7 @@ class CheckOperation(PatchOperation):
             'is': IsComparator,
             'range': RangeComparator,
             'in': InComparator,
+            'invalue': InValueComparator,
             'custom': None,
         }
 
